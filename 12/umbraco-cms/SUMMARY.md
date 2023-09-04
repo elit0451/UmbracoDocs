@@ -21,3 +21,8 @@
 ## Tutorials
 
 * [Creating Custom Database Tables with Entity Framework](tutorials/getting-started-with-entity-framework-core.md)
+
+## 🧪 Test
+
+* [Media Delivery API](test/media-delivery-api.md)
+* [Content Delivery API](test/content-delivery-api.md)
