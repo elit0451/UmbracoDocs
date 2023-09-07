@@ -1,5 +1,7 @@
 # Protected content in the Delivery API
 
+## Protected content in the Delivery API
+
 Umbraco allows for restricting access to content. Using the "Public access" feature, specific content items can be protected and made accessible only for authorized members. The same is possible in the Delivery API.
 
 By default, protected content is ignored by the Delivery API, and is never exposed through any API endpoints. However, by enabling member authorization in the Delivery API, protected content can be accessed by means of access tokens.
@@ -12,19 +14,24 @@ TODO: VERIFY THIS Member authorization in the Delivery API was introduced in ver
 If you are not familiar with members in Umbraco, please read [this article](https://docs.umbraco.com/umbraco-cms/fundamentals/data/members) to learn more.
 {% endhint %}
 
-## Member authorization
+### Member authorization
 
 Member authentication and authorization in the Delivery API is performed using the OpenId Connect flow _Authorization Code Flow + PKCE_. This is a complex authorization flow, and it is beyond the scope of this article to explain it. Loads of articles can be found online that explain the flow in detail.
 
 Fortunately, most programming languages have OpenId Connect client libraries to handle the complexity for us. [`AppAuth`](https://appauth.io/) is a great example of such a library. In ASP.NET Core, OpenId Connect support is built into the framework.
 
-### Enabling member authorization
+#### Enabling member authorization
 
 Member authorization is an opt-in feature of the Delivery API. To enable it, configure `MemberAuthorization::AuthorizationCodeFlow` in the `DeliveryApi` section of `appsettings.json`:
 
-* `Enabled` must be `true`
+* `Enabled` must be `true`.
 * One or more `LoginRedirectUrls` must be configured. These specify where the server is allowed to redirect the client after a successful authorization.
-* Optionally one or more `LogoutRedirectUrls` must be configured. These specify where the server is allowed to redirect the client after successfully terminating a session. These are only necessary if logout is implemented in the client.
+* Optionally one or more `LogoutRedirectUrls` must be configured. These specify where the server is allowed to redirect the client after successfully terminating a session.
+  * These are only necessary if logout is implemented in the client.
+
+{% hint style="warning" %}
+All redirect URLs must be absolute and contain the full path to the expected resource. It is not possible to use wildcards or to allow all paths under a given domain.
+{% endhint %}
 
 {% code title="appsettings.json" %}
 ```json
@@ -55,19 +62,15 @@ Member authorization is an opt-in feature of the Delivery API. To enable it, con
 When changing the `MemberAuthorization` configuration, Umbraco must be restarted to pick up on the changes.
 {% endhint %}
 
-{% hint style="info" %}
-All redirect URLs must be absolute and contain the full path to the expected resource. It is not possible to use wildcards or to allow all paths under a given domain.
-{% endhint %}
-
 {% hint style="warning" %}
 When enabling or disabling member authentication, the `DeliveryApiContentIndex` must be rebuilt to correctly reflect the existing content protection state.
 
 The index can be rebuilt from the [Examine Management dashboard](https://docs.umbraco.com/umbraco-cms/reference/searching/examine/examine-management).
 {% endhint %}
 
-## Server endpoints
+### Server endpoints
 
-Many client libraries support automatic discovery of the server OpenId endpoints. This is also supported by the Delivery API, so likely we don't have to worry about the server endpoints.
+Many client libraries support automatic discovery of the server OpenId endpoints. This is also supported by the Delivery API, so likely we do not have to worry about the server endpoints.
 
 If automatic discovery is not applicable, the server endpoints must be configured manually. The server endpoints can be found at `https://{server-host}/.well-known/openid-configuration`.
 
@@ -75,7 +78,7 @@ If automatic discovery is not applicable, the server endpoints must be configure
 Keep in mind that the API versions can change over time, which might affect the configuration.
 {% endhint %}
 
-## Client configuration
+### Client configuration
 
 To connect the client and the server, we need to apply some configuration details to the connection:
 
@@ -83,7 +86,7 @@ To connect the client and the server, we need to apply some configuration detail
 * The `response_type` must be `code`.
 * The `redirect_uri` must be one of the configured `LoginRedirectUrls`.
 * The `scope` must either be empty, or be `openid` and/or `offline_access`.
-* PKCE must be enabled.
+* _PKCE_ must be enabled.
 
 In an ASP.NET Core client, the configuration can be applied like this:
 
@@ -123,13 +126,13 @@ services.AddAuthentication(options =>
 ```
 {% endcode %}
 
-## Logging in members
+### Logging in members
 
 _Authorization Code Flow + PKCE_ requires the authentication service (identity provider) to be separate from the client application. This is to ensure that credentials are never exposed directly to the client application.
 
-As authentication service we can use both Umbraco's built-in member authentication and external identity providers. By default the Delivery API attempts to use the built-in member authentication.
+As an authentication service, we can use both Umbraco's built-in member authentication and external identity providers. By default the Delivery API attempts to use the built-in member authentication.
 
-### How to use the built-in member authentication
+#### How to use the built-in member authentication
 
 First and foremost we need a login page. By ASP.NET Core defaults, this page should be located at `/Account/Login`. However, we can change the default path by adding the following piece of code:
 
@@ -169,7 +172,7 @@ public static class ConfigureCustomMemberLoginPathExtensions
 ```
 {% endcode %}
 
-To invoke this code, we need to call `SetCustomMemberLoginPath()` in `Startup`:
+To invoke this code, we need to call `SetCustomMemberLoginPath()` in `Startup.cs`:
 
 {% code title="Startup.cs" %}
 ```csharp
@@ -183,7 +186,7 @@ public void ConfigureServices(IServiceCollection services)
 ```
 {% endcode %}
 
-No matter the path to the login page, we still need a page to render the login screen. Create a page located at the login page path, and use this template to render it:
+No matter the path to the login page, we still need a page to render the login screen. Create a content node located at the login page path, and use this template to render it:
 
 {% code title="Login.cshtml" %}
 ```razor
@@ -227,7 +230,7 @@ No matter the path to the login page, we still need a page to render the login s
 ```
 {% endcode %}
 
-With all this in place it's time to test the setup. Use a browser to perform a request to `https://{server-host}/umbraco/delivery/api/v1/security/member/authorize` with these query string parameters:
+With all this in place, it's time to test the setup. Use a browser to perform a request to `https://{server-host}/umbraco/delivery/api/v1/security/member/authorize` with these query string parameters:
 
 * `client_id=umbraco-member`
 * `redirect_uri=https://absolute.redirect.url/path/after/login` (replace the value with one of the configured login redirect URLs)
@@ -243,13 +246,13 @@ Do not worry about the URL construction and subsequent handling of the `code` pa
 
 For more inspiration on using the built-in member authentication, visit [this tutorial](https://docs.umbraco.com/umbraco-cms/tutorials/members-registration-and-login). Here you will also learn how to create member sign-up functionality.
 
-### How to use external identity providers
+#### How to use external identity providers
 
 Umbraco allows adding external identity providers for both back-office users and members. The process is documented in detail in [this article](https://docs.umbraco.com/umbraco-cms/reference/security/external-login-providers/).
 
-The Delivery API supports the same functionality. In the following we'll be using GitHub to test this.
+The Delivery API supports the same functionality. In the following, we'll be using GitHub to test this.
 
-First we need to create an OAuth App in GitHub. This is done in the [GitHub Developer Settings](https://github.com/settings/developers). Use `https://{server-host}/umbraco/signin-github` as authorization callback URL in the App.
+First, we need to create an OAuth App in GitHub. This is done in the [GitHub Developer Settings](https://github.com/settings/developers). Use `https://{server-host}/umbraco/signin-github` as authorization callback URL in the App.
 
 Once the App is created, generate a new client secret within the App. Make sure to copy both the client ID of your App and the generated secret.
 
@@ -319,7 +322,7 @@ public static class GitHubAuthenticationExtensions
 ```
 {% endcode %}
 
-Finally we need to invoke the connection configuration by calling `AddGitHubAuthentication()` in `Startup`.
+Finally, we need to invoke the connection configuration by calling `AddGitHubAuthentication()` in `Startup.cs`.
 
 {% code title="Startup.cs" %}
 ```csharp
@@ -358,15 +361,15 @@ services.AddAuthentication(...)
 ```
 {% endcode %}
 
-### Combining built-in member authentication and external identity providers
+#### Combining built-in member authentication and external identity providers
 
-We can also add the external identity providers to the member authentication login screen. This way the end user can decide whether to log in as a registered member, or use an external identity provider.
+We can also add the external identity providers to the member authentication login screen. This way the end user can decide whether to log in as a registered member or use an external identity provider.
 
 The [Login partial view](https://github.com/umbraco/Umbraco-CMS/blob/contrib/src/Umbraco.Core/EmbeddedResources/Snippets/Login.cshtml) features an implementation of this combined login experience.
 
-## Accessing protected content
+### Accessing protected content
 
-When the authorization flow completes we'll obtain an access token. This token can be used as a bearer token to access protected content for the logged in member:
+When the authorization flow completes we'll obtain an access token. This token can be used as a bearer token to access protected content for the logged-in member:
 
 ```http
 GET /umbraco/delivery/api/v1/content/{query}
@@ -375,7 +378,7 @@ Authentication: Bearer {access token}
 
 Access tokens expire after one hour. Once expired, a new access token must be obtained to continue accessing protected content.
 
-## Refresh tokens
+### Refresh tokens
 
 Refresh tokens provide a means to obtain a new access token without having to go through the authentication flow. A refresh token is issued automatically by the Delivery API when the `offline_access` scope is specified in the authorization request.
 
@@ -383,13 +386,13 @@ Refresh tokens provide a means to obtain a new access token without having to go
 Refresh tokens are subject to certain limitations and can result in security issues if not applied correctly. All this is beyond the scope of this article to explain in detail. Please familiarize yourself with the inner workings of refresh tokens before applying them in a solution.
 {% endhint %}
 
-## Logging out members
+### Logging out members
 
 The member authorization is tied to the access and refresh tokens obtained in the authorization flow. Discarding these tokens efficiently terminates the access to protected content.
 
 However, the tokens are still valid and can be reapplied until they expire. Depending on your scenario, it might be prudent to revoke the tokens and maybe even terminate the session on the server.
 
-### Revoking tokens
+#### Revoking tokens
 
 Access and refresh tokens can be revoked by performing a `POST` request containing the token:
 
@@ -400,7 +403,7 @@ POST /umbraco/delivery/api/v1/security/member/revoke
 Content-Type: application/x-www-form-urlencoded
 ```
 
-### Terminating a session
+#### Terminating a session
 
 When terminating a session on the server, the member is logged out of Umbraco. This means any subsequent authorization attempt will require an explicit login.
 
@@ -410,7 +413,7 @@ To terminate the active session for any given member, you must redirect the brow
 GET /umbraco/delivery/api/v1/security/member/signout?post_logout_redirect_uri={valid URL from LogoutRedirectUrls}
 ```
 
-## Testing with Swagger
+### Testing with Swagger
 
 The Delivery API Swagger document can be configured to support member authentication.
 
@@ -419,7 +422,7 @@ Before we can do that, we need two things in place:
 1. We have to implement a login page as described above.
 2. We must add `https://{server-host}/umbraco/swagger/oauth2-redirect.html` to the configured `LoginRedirectUrls`.
 
-With these in place, we can enable member authentication in Swagger for the Delivery API by adding the following to `Startup`:
+With these in place, we can enable member authentication in Swagger for the Delivery API by adding the following to `Startup.cs`:
 
 {% code title="Startup.cs" %}
 ```csharp
@@ -436,7 +439,7 @@ The Swagger UI will now feature authorization.
 
 Remember to use `umbraco-member` as `client_id` when authorizing. `client_secret` can be omitted, as it is not used by the authorization flow.
 
-## Limitations
+### Limitations
 
 The inner workings of Umbraco impose a few limitations on protected content within the Delivery API:
 
