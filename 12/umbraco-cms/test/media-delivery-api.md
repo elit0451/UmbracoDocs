@@ -10,7 +10,7 @@ Unlike the Content Delivery API, the Media Delivery API does not feature an exte
 The reasoning behind is that third-party media systems might support a complete implementation of the specification. If the demand rises, the default implementation might eventually cover the entire specification.
 {% endhint %}
 
-## Getting Started
+### Getting Started
 
 To use the Media Delivery API you must first enable it. Even if the Content Delivery API is enabled, the Media Delivery API remains disabled by default.
 
@@ -40,11 +40,11 @@ As this configuration sample illustrates, it is possible to restrict public acce
 {% hint style="info" %}
 The `Media` configuration can only become more restrictive than the `DeliveryApi` configuration:
 
-* If `DeliveryApi::Enabled` is `false`, the `DeliveryApi::Media::Enabled` configuration option has no effect. The Media Delivery API cannot be enabled on its own.
-* If `DeliveryApi::PublicAccess` is `false`, the `DeliveryApi::Media::PublicAccess` configuration option has no effect. The Media Delivery API cannot be publicly available if the Content Delivery API is not.
+* If `DeliveryApi:Enabled` is `false`, the `DeliveryApi:Media:Enabled` configuration option has no effect. The Media Delivery API cannot be enabled on its own.
+* If `DeliveryApi:PublicAccess` is `false`, the `DeliveryApi:Media:PublicAccess` configuration option has no effect. The Media Delivery API cannot be publicly available if the Content Delivery API is not.
 {% endhint %}
 
-## Endpoints
+### Endpoints
 
 The Media Delivery API can either be queried for a specific media item or a paged list of multiple items.
 
@@ -52,7 +52,7 @@ The Media Delivery API can either be queried for a specific media item or a page
 In the Media Delivery API, `id` parameters always refer to media item keys (`Guid`), not node ids (`integer`).
 {% endhint %}
 
-{% swagger method="get" path="/media/item/{id}" baseUrl="/umbraco/delivery/api/v1" summary="Gets a media item by id" %}
+{% swagger method="get" path="/media/item/{id}" baseUrl="/umbraco/delivery/api/v2" summary="Gets a media item by id" %}
 {% swagger-description %}
 Returns a single item.
 {% endswagger-description %}
@@ -69,6 +69,10 @@ Access token
 Which properties to expand in the response
 {% endswagger-parameter %}
 
+{% swagger-parameter in="query" name="fields" type="String" required="false" %}
+Which properties to include in the response (_by default all properties are included_)
+{% endswagger-parameter %}
+
 {% swagger-response status="200: OK" description="Media item" %}
 
 {% endswagger-response %}
@@ -82,13 +86,13 @@ Which properties to expand in the response
 {% endswagger-response %}
 {% endswagger %}
 
-{% swagger method="get" path="/media/item/{path}" baseUrl="/umbraco/delivery/api/v1" summary="Gets a media item by path" %}
+{% swagger method="get" path="/media/item/{path}" baseUrl="/umbraco/delivery/api/v2" summary="Gets a media item by path" %}
 {% swagger-description %}
 Returns a single item.
 {% endswagger-description %}
 
 {% swagger-parameter in="path" name="path" type="String" required="true" %}
-Path of the media item. The path is composed by the names of any ancestor folders and the name of the media item itself, separated by 
+Path of the media item. The path is composed by the names of any ancestor folders and the name of the media item itself, separated by
 
 `/`
 
@@ -103,6 +107,10 @@ Access token
 Which properties to expand in the response
 {% endswagger-parameter %}
 
+{% swagger-parameter in="query" name="fields" type="String" required="false" %}
+Which properties to include in the response (_by default all properties are included_)
+{% endswagger-parameter %}
+
 {% swagger-response status="200: OK" description="Media item" %}
 
 {% endswagger-response %}
@@ -116,7 +124,7 @@ Which properties to expand in the response
 {% endswagger-response %}
 {% endswagger %}
 
-{% swagger method="get" path="/media/item" baseUrl="/umbraco/delivery/api/v1" summary="Gets media item(s) by id" %}
+{% swagger method="get" path="/media/items" baseUrl="/umbraco/delivery/api/v2" summary="Gets media item(s) by id" %}
 {% swagger-description %}
 Returns single or multiple items by id.
 {% endswagger-description %}
@@ -133,6 +141,10 @@ Access token
 Which properties to expand in the response
 {% endswagger-parameter %}
 
+{% swagger-parameter in="query" name="fields" type="String" required="false" %}
+Which properties to include in the response (_by default all properties are included_)
+{% endswagger-parameter %}
+
 {% swagger-response status="200: OK" description="List of media items" %}
 
 {% endswagger-response %}
@@ -142,7 +154,7 @@ Which properties to expand in the response
 {% endswagger-response %}
 {% endswagger %}
 
-{% swagger method="get" path="/media" baseUrl="/umbraco/delivery/api/v1" summary="Gets media item(s) from a query" %}
+{% swagger method="get" path="/media" baseUrl="/umbraco/delivery/api/v2" summary="Gets media item(s) from a query" %}
 {% swagger-description %}
 Returns single or multiple items.
 {% endswagger-description %}
@@ -154,35 +166,11 @@ Structural query string option (e.g. `ancestors`, `children`, `descendants`).
 {% endswagger-parameter %}
 
 {% swagger-parameter in="query" name="filter" type="String Array" required="false" %}
-Filtering query string options (e.g. 
-
-`mediaType`
-
-, 
-
-`name`
-
-)
+Filtering query string options (e.g. `mediaType`, `name`)
 {% endswagger-parameter %}
 
 {% swagger-parameter in="query" name="sort" type="String Array" required="false" %}
-Sorting query string options (e.g. 
-
-`createDate`
-
-, 
-
-`name`
-
-, 
-
-`sortOrder`
-
-, 
-
-`updateDate`
-
-)
+Sorting query string options (e.g. `createDate`, `name`, `sortOrder`, `updateDate`)
 {% endswagger-parameter %}
 
 {% swagger-parameter in="query" name="skip" type="Integer" required="false" %}
@@ -201,6 +189,10 @@ Access token
 Which properties to expand in the response
 {% endswagger-parameter %}
 
+{% swagger-parameter in="query" name="fields" type="String" required="false" %}
+Which properties to include in the response (_by default all properties are included_)
+{% endswagger-parameter %}
+
 {% swagger-response status="200: OK" description="Paginated list of media items" %}
 
 {% endswagger-response %}
@@ -210,39 +202,39 @@ Which properties to expand in the response
 {% endswagger-response %}
 {% endswagger %}
 
-### Request samples
+#### Request samples
 
 Fetch a media item by its ID:
 
 ```http
-GET /umbraco/delivery/api/v1/media/item/3fa85f64-5717-4562-b3fc-2c963f66afa6
+GET /umbraco/delivery/api/v2/media/item/3fa85f64-5717-4562-b3fc-2c963f66afa6
 ```
 
 Fetch a media item inside a folder structure by its full path, and expand its `author` property:
 
 ```http
-GET /umbraco/delivery/api/v1/media/item/root level folder/child folder/media item name/&expand=property:author
+GET /umbraco/delivery/api/v2/media/item/root level folder/child folder/media item name/&expand=property:author
 ```
 
 Fetch two media items by their ids:
 
 ```http
-GET /umbraco/delivery/api/v1/media/item?id=11178b4f-f8e2-4686-9697-6d990851a081&id=7cd00706-de93-4db8-8fc2-4b20e8419c30
+GET /umbraco/delivery/api/v2/media/item?id=11178b4f-f8e2-4686-9697-6d990851a081&id=7cd00706-de93-4db8-8fc2-4b20e8419c30
 ```
 
 Fetch the first 10 media items of type `Image` at root level. Return the found items sorted by name ascending:
 
 ```http
-GET /umbraco/delivery/api/v1/media?fetch=children:/&filter=mediaType:Image&sort=name:asc&skip=0&take=10
+GET /umbraco/delivery/api/v2/media?fetch=children:/&filter=mediaType:Image&sort=name:asc&skip=0&take=10
 ```
 
 Fetch the first 5 media items inside a folder structure. Return only items of type `Image` whose item names contain "size".
 
 ```http
-GET /umbraco/delivery/api/v1/media?fetch=children:/root level folder/child folder/&filter=mediaType:Image&filter=name:size&skip=0&take=5
+GET /umbraco/delivery/api/v2/media?fetch=children:/root level folder/child folder/&filter=mediaType:Image&filter=name:size&skip=0&take=5
 ```
 
-## Media item JSON structure
+### Media item JSON structure
 
 The Media Delivery API outputs the JSON structure outlined below to represent media items:
 
